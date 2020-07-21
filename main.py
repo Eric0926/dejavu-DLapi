@@ -14,5 +14,6 @@ def api_predict():
 
 
 if __name__ == "__main__":
+    os.environ["LD_PRELOAD"] = "~/anaconda3/lib/libmkl_core.so:~/anaconda3/lib/libmkl_sequential.so"
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS
     app.run()

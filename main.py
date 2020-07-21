@@ -10,3 +10,7 @@ def api_predict():
         'https://storage.googleapis.com/flagged_evaluation_images/444_10_r2.png', 10)
     for image in images:
         print(image)
+
+
+if __name__ == "__main__":
+    app.run()

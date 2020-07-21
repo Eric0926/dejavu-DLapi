@@ -56,6 +56,7 @@ if __name__ == '__main__':
     # top_n, scores = vgg_search(image_path, 10)
     images = vgg_search(
         'https://storage.googleapis.com/flagged_evaluation_images/444_10_r2.png', 10)
+
     print(images)
 
 #top_n, scores = vgg_search('https://static01.nyt.com/images/2020/03/19/world/19virus-briefing-notravel/merlin_170711415_4eef2c15-1dac-47f6-b305-531f35736ed7-articleLarge.jpg?quality=75&auto=webp&disable=upscale', 10)

@@ -56,7 +56,6 @@ if __name__ == '__main__':
     # top_n, scores = vgg_search(image_path, 10)
     images = vgg_search(
         'https://storage.googleapis.com/flagged_evaluation_images/444_10_r2.png', 10)
-
     for image in images:
         print(image)
 

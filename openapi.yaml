@@ -1,0 +1,25 @@
+swagger: "2.0"
+info:
+  title: Dejavu API
+  description: This api deploys a CV deep learning model which can identify visual misinformation 
+  version: 0.0.1
+
+host: "dejavu-api.endpoints.adina-image-analysis.cloud.goog"
+basePath: /v0
+schemes: [http, https]
+
+paths:
+  /search:
+    get:
+      description: Return a list of similar image urls
+      summary: Search similar by image url
+      operationID: getImagesByUrl
+      produces:
+        - application/json
+      reponses:
+        '200':
+          description: a list of image urls to be returned
+          schema:
+            type: array
+            items:
+              $ref: '#/images'

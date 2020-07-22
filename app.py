@@ -9,7 +9,7 @@ app = Flask(__name__)
 @app.route("/search")
 def search():
     img_url = request.form["img_url"]
-    results_num = request.form["results_num"]
+    results_num = int(request.form["results_num"])
     try:
         # images = vgg_search('https://storage.googleapis.com/flagged_evaluation_images/444_10_r2.png', 10)
         results = vgg_search(img_url, results_num)

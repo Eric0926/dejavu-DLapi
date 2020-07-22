@@ -37,7 +37,7 @@ def vgg_search(img_url, nb_results):
     top_n, scores, sources = utils_evaluation.eval_retrieve_top_n(
         I, nb_results)
 
-    numbers = list(range(1, 11))
+    numbers = list(range(1, nb_results + 1))
 
     images = []
     for num in numbers:

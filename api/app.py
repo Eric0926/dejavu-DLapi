@@ -22,5 +22,5 @@ def search():
 if __name__ == "__main__":
     # os.environ["LD_PRELOAD"] = "~/anaconda3/lib/libmkl_core.so:~/anaconda3/lib/libmkl_sequential.so"
     # export LD_PRELOAD=~/anaconda3/lib/libmkl_core.so:~/anaconda3/lib/libmkl_sequential.so
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS
+    # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS
     app.run(host='0.0.0.0', port=5000)

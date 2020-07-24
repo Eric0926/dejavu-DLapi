@@ -4,7 +4,7 @@ WORKDIR /api
 
 COPY requirements.txt /api/requirements.txt
 
-RUN conda install python=3.6.10
+RUN conda install python=3.6
 
 RUN conda install faiss-cpu -c pytorch -y
 

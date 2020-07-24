@@ -6,7 +6,7 @@ import time
 import pickle
 import pandas as pd
 from google.cloud import datastore, storage
-# import faiss
+import faiss
 from urllib.request import FancyURLopener
 import json
 from heapq import nlargest
@@ -48,6 +48,7 @@ def ext(url):
 
     return ext
 
+
 def del_ext(filename):
     """delete the extension of the filename"""
     filename = filename.replace('.jpeg', '')
@@ -57,6 +58,7 @@ def del_ext(filename):
     filename = filename.replace('.webm', '')
     return filename
 
+
 def del_breakingNews_pre_name(filename):
     """delete the "222_ of the filename"""
     filename = filename.replace('222_', '')
@@ -64,6 +66,8 @@ def del_breakingNews_pre_name(filename):
     return filename
 
 # Returns image filename
+
+
 def get_filename(url):
     '''
     Takes in an image url and returns the filename
@@ -76,6 +80,7 @@ def get_filename(url):
     name = del_breakingNews_pre_name(filename)
 
     return int(name)
+
 
 def url_to_img(url):
     """download the image, convert it to a NumPy array, and then read
@@ -94,7 +99,8 @@ def compute_ORB(img, orb, show_image=False):
 
     if show_image:
         try:
-            img2 = cv2.drawKeypoints(img, key_points, outImage=np.array([]), color=(0, 255, 0), flags=0)
+            img2 = cv2.drawKeypoints(img, key_points, outImage=np.array(
+                []), color=(0, 255, 0), flags=0)
             #plt.imshow(img2), plt.show()
         except:
             None
@@ -102,7 +108,7 @@ def compute_ORB(img, orb, show_image=False):
     return des
 
 
-def load_or_add_orb (img_name, img, orb):
+def load_or_add_orb(img_name, img, orb):
 
     datastore_client = datastore.Client('adina-image-analysis')
     kind = "Images Descriptors And Indexing"
@@ -113,7 +119,8 @@ def load_or_add_orb (img_name, img, orb):
 
     if not entity:
 
-        entity = datastore.Entity(key=k, exclude_from_indexes=['The Descriptors'])
+        entity = datastore.Entity(
+            key=k, exclude_from_indexes=['The Descriptors'])
 
         try:
             des = compute_ORB(img, orb, show_image=False)
@@ -149,82 +156,83 @@ def load_or_add_orb (img_name, img, orb):
 
 def create_desc_datastore(orb):
 
-        storage_client = storage.Client('adina-image-analysis')
-        bucket = storage_client.get_bucket('adina-images')
+    storage_client = storage.Client('adina-image-analysis')
+    bucket = storage_client.get_bucket('adina-images')
 
-        datastore_client = datastore.Client('adina-image-analysis')
-        kind = "Images Descriptors And Indexing"
+    datastore_client = datastore.Client('adina-image-analysis')
+    kind = "Images Descriptors And Indexing"
 
-        url_err_count = 0
-        url_err_list = []
+    url_err_count = 0
+    url_err_list = []
 
-        orb_err_count = 0
-        orb_err_list = []
+    orb_err_count = 0
+    orb_err_list = []
 
-        p = 0
+    p = 0
 
-        for blob in bucket.list_blobs():
+    for blob in bucket.list_blobs():
 
-            X = []
+        X = []
 
-            if not (ext(blob.public_url) == '.jpeg' or ext(blob.public_url) == '.png' or ext(
-                    blob.public_url) == '.jpg'):
-                continue
+        if not (ext(blob.public_url) == '.jpeg' or ext(blob.public_url) == '.png' or ext(
+                blob.public_url) == '.jpg'):
+            continue
+
+        try:
+            img = url_to_img(blob.public_url)
+
+        except:
+            url_err_count += 1
+            url_err_list.append(blob.public_url)
+            continue
+
+        k = datastore_client.key(kind, del_ext(blob.name))
+
+        entity = datastore_client.get(k)
+
+        if not entity:
+
+            entity = datastore.Entity(
+                key=k, exclude_from_indexes=['The Descriptors'])
 
             try:
-                img = url_to_img(blob.public_url)
 
-            except:
-                url_err_count += 1
-                url_err_list.append(blob.public_url)
-                continue
+                des = compute_ORB(img, orb, show_image=False)
+                if des.any() != None:
 
-            k = datastore_client.key(kind, del_ext(blob.name))
+                    Number_Of_Dscriptors = des.shape[0]
+                    Descriptors_Length = des.shape[1]
 
-            entity = datastore_client.get(k)
+                    for i in range(des.shape[0]):
+                        X.append(convert_intList_to_bit(list(des[i])))
 
-            if not entity:
+                    des_json = json.dumps(X)
 
-                entity = datastore.Entity(key=k, exclude_from_indexes=['The Descriptors'])
+                    entity.update(
+                        {'Number Of Descriptors': Number_Of_Dscriptors,
+                         'Descriptors Length (byts)': Descriptors_Length,
+                         'The Descriptors': des_json, 'Is Indexed': "No"})
 
-                try:
+                    datastore_client.put(entity)
 
-                    des = compute_ORB(img, orb, show_image=False)
-                    if des.any() != None:
+                    p += 1
+                    if p % 1000 == 0:
+                        print(p, 'images processed')
 
-                        Number_Of_Dscriptors = des.shape[0]
-                        Descriptors_Length = des.shape[1]
-
-                        for i in range(des.shape[0]):
-                            X.append(convert_intList_to_bit(list(des[i])))
-
-                        des_json = json.dumps(X)
-
-                        entity.update(
-                            {'Number Of Descriptors': Number_Of_Dscriptors,
-                             'Descriptors Length (byts)': Descriptors_Length,
-                             'The Descriptors': des_json, 'Is Indexed': "No"})
-
-                        datastore_client.put(entity)
-
-                        p += 1
-                        if p % 1000 == 0:
-                            print(p, 'images processed')
-
-                    else:
-                        orb_err_count += 1
-                        orb_err_list.append(str(blob.name))
-                        continue
-
-                except:
+                else:
                     orb_err_count += 1
                     orb_err_list.append(str(blob.name))
                     continue
 
-        print(url_err_count, "errors while trying to convert URL to images. The images are:", url_err_list)
-        print(orb_err_count, "errors while trying to compute_ORB descriptors. The images are:", orb_err_list)
+            except:
+                orb_err_count += 1
+                orb_err_list.append(str(blob.name))
+                continue
 
-        return True
+    print(url_err_count, "errors while trying to convert URL to images. The images are:", url_err_list)
+    print(orb_err_count, "errors while trying to compute_ORB descriptors. The images are:", orb_err_list)
+
+    return True
 
 
 # def training_create_desc_datastore(orb):
@@ -315,10 +323,10 @@ def bootstrap_images(n, kind):
     return n_keys_for_pca
 
 
-
 def create_pca(n_keys_for_pca, kind, label):
 
-    print("n_keys_for_pca", type(n_keys_for_pca), len(n_keys_for_pca), n_keys_for_pca[1:10])
+    print("n_keys_for_pca", type(n_keys_for_pca),
+          len(n_keys_for_pca), n_keys_for_pca[1:10])
 
     datastore_client = datastore.Client('adina-image-analysis')
 
@@ -334,7 +342,6 @@ def create_pca(n_keys_for_pca, kind, label):
         for i in range(len(desc)):
             desc_all.append(desc[i])
 
-
     print("in create_pca the desc_all is", type(desc_all), len(desc_all))
 
     # j = 0
@@ -349,9 +356,11 @@ def create_pca(n_keys_for_pca, kind, label):
 
     # np_desc_all = np.asarray(desc_all, dtype=np.float32)
 
-    print("in create_pca the np_desc_all is", type(np_desc_all), np_desc_all.shape)
+    print("in create_pca the np_desc_all is",
+          type(np_desc_all), np_desc_all.shape)
 
-    desc_matrix_post_pca, pca = reduce_DB_dim(np_desc_all, d=128, return_pca=True)
+    desc_matrix_post_pca, pca = reduce_DB_dim(
+        np_desc_all, d=128, return_pca=True)
 
     return pca
 
@@ -454,7 +463,7 @@ def batches_index(index2, pca, batch_size):
     q_results = list(q.fetch())
     print("len_q_results", len(q_results))
 
-    h= 0
+    h = 0
     c = 0
     desc_all = []
     filenames = []
@@ -499,7 +508,8 @@ def batches_index(index2, pca, batch_size):
                 print("filenames", filenames.shape, filenames)
                 print("c", c)
                 print("h", h)
-                print("des_orb_post_pca", type(des_orb_post_pca), des_orb_post_pca)
+                print("des_orb_post_pca", type(
+                    des_orb_post_pca), des_orb_post_pca)
                 continue
             indexed_entities.extend(looped_entities)
             c = 0
@@ -569,7 +579,6 @@ def retrieve_top_n(I, n=5):
     for index in indexes_list:
         filename_count[index] += 1
 
-
     top_n = nlargest(n, filename_count, key=filename_count.get)
 
     num = 1
@@ -584,7 +593,7 @@ def retrieve_top_n(I, n=5):
         print("Top N_", num, ":")
         print(str_i, "with score:", filename_count[num_i])
 
-        num+=1
+        num += 1
 
     return top_n_ids
 

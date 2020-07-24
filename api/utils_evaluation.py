@@ -7,7 +7,7 @@ import time
 import pickle
 import pandas as pd
 from google.cloud import datastore, storage
-# import faiss
+import faiss
 from urllib.request import FancyURLopener
 import json
 from heapq import nlargest
@@ -18,6 +18,7 @@ import imageio
 from sklearn.decomposition import PCA
 import io
 import requests
+
 
 def create_evaluation_desc_datastore(orb, kind):
 
@@ -44,7 +45,8 @@ def create_evaluation_desc_datastore(orb, kind):
 
         if not entity:
 
-            entity = datastore.Entity(key=k, exclude_from_indexes=['ORB Descriptors'])
+            entity = datastore.Entity(
+                key=k, exclude_from_indexes=['ORB Descriptors'])
             try:
 
                 des = utils.compute_ORB(img, orb, show_image=False)
@@ -118,7 +120,8 @@ def sample_social_media_datastore(orb, quantity, kind):
 
                     k = datastore_client.key(kind, name)
 
-                    entity = datastore.Entity(key=k, exclude_from_indexes=['ORB Descriptors', 'VGG16 Descriptors'])
+                    entity = datastore.Entity(key=k, exclude_from_indexes=[
+                                              'ORB Descriptors', 'VGG16 Descriptors'])
 
                     # print("1")
                     # print(entity)
@@ -155,7 +158,7 @@ def eval_index(index2, kind):
     q_results = list(q.fetch())
     print("len_q_results", len(q_results))
 
-    h= 0
+    h = 0
     desc_all = []
     filenames = []
     looped_entities = []
@@ -167,7 +170,7 @@ def eval_index(index2, kind):
         q2.key_filter(the_key)
         image_entity = (list(q2.fetch()))[0]
 
-        if utils.check_if_indexed(image_entity,'Indexed(ORB)') == True:
+        if utils.check_if_indexed(image_entity, 'Indexed(ORB)') == True:
             continue
 
         desc = json.loads(image_entity['ORB Descriptors'])
@@ -218,7 +221,7 @@ def eval_index_with_pca(index2, kind, pca):
     q_results = list(q.fetch())
     print("len_q_results", len(q_results))
 
-    h= 0
+    h = 0
     desc_all = []
     filenames = []
     looped_entities = []
@@ -230,7 +233,7 @@ def eval_index_with_pca(index2, kind, pca):
         q2.key_filter(the_key)
         image_entity = (list(q2.fetch()))[0]
 
-        if utils.check_if_indexed(image_entity,'Indexed(ORB)') == True:
+        if utils.check_if_indexed(image_entity, 'Indexed(ORB)') == True:
             continue
 
         desc = json.loads(image_entity['ORB Descriptors'])
@@ -291,6 +294,7 @@ def eval_compute_xq_cloud(orb, img_url):
 
     return np.array(xq).astype('float32')
 
+
 def eval_compute_xq_cloud_with_pca(orb, img_url, pca):
     """compute the query vector of descriptors from the image url"""
 
@@ -326,7 +330,6 @@ def eval_retrieve_top_n(I, n):
     for index in indexes_list:
         filename_count[index] += 1
 
-
     top_n = nlargest(n, filename_count, key=filename_count.get)
 
     num = 1
@@ -340,7 +343,7 @@ def eval_retrieve_top_n(I, n):
         scores.append(filename_count[str_i])
         sources.append(ds_source(str_i))
 
-        num+=1
+        num += 1
 
     return top_n_ids, scores, sources
 
@@ -388,7 +391,7 @@ def eval_retrieve_top_n(I, n):
 
 # used once with 'image_urls.tsv' and stopped manually after 283 images
 def add_BreakingNews_dataset(input_file):
-    n=1
+    n = 1
     with open(input_file, "r") as urls:
         for line in urls.read().split("\n"):
             line = line.split("\t")
@@ -397,17 +400,19 @@ def add_BreakingNews_dataset(input_file):
                 urlo = urlopen(url)
                 urll = image.load_img(urlo)
                 imageio.imwrite('222_'+str(n)+'.jpg', np.array(urll))
-                n+=1
+                n += 1
             except:
                 continue
     urls.close()
     return
 
 # used once with 'image_urls.tsv' after the 283-rd image
+
+
 def add_to_storage_BreakingNews_dataset(input_file):
     storage_client = storage.Client('adina-image-analysis')
     bucket = storage_client.get_bucket('additional_evaluation_images')
-    n=1
+    n = 1
     with open(input_file, "r") as urls:
         for line in urls.read().split("\n"):
             if n <= 9239:
@@ -417,7 +422,7 @@ def add_to_storage_BreakingNews_dataset(input_file):
             if n >= 15000:
                 return
 
-            if n%500 == 0:
+            if n % 500 == 0:
                 print(n)
 
             line = line.split("\t")
@@ -438,6 +443,8 @@ def add_to_storage_BreakingNews_dataset(input_file):
     return
 
 # used once with 'mini_originals.tsv', 'mini_photoshops.tsv'
+
+
 def add_p_s_battles(input_file, input_file2):
     path = 'original_p_s'
     path2 = 'photoshops_p_s'
@@ -531,6 +538,8 @@ def add_to_storage_p_s_battles(input_file, input_file2):
     return
 
 # used once with quantity=130
+
+
 def sample_social_media_storage(quantity):
     storage_client = storage.Client('adina-image-analysis')
     bucket = storage_client.get_bucket('adina-images')
@@ -577,6 +586,8 @@ def sample_social_media_storage(quantity):
 
 # a function for the copy_move dataset - rename files.
 # for example -  used with s_path = 'cmbExtra2', d_path = 'generated_cm_images/new'
+
+
 def rename_cm_dataset(s_path, d_path):
     names = {}
     names['barrier'] = '444_1'
@@ -629,20 +640,21 @@ def rename_cm_dataset(s_path, d_path):
     names['writing_history'] = '444_48'
 
     for folder in os.listdir(s_path):
-        for filename in os.listdir(os.path.join(s_path,folder)):
+        for filename in os.listdir(os.path.join(s_path, folder)):
             if '_gt_' in filename:
                 continue
             end_indexes = (filename.find('_copy_') + 5)
             end_parameters = filename[end_indexes:]
             urll = image.load_img(s_path + '/' + folder + '/' + filename)
-            for key,value in names.items():
+            for key, value in names.items():
                 if utils.del_ext(filename).startswith(key):
                     new_name = value
                     break
-            p_and_n = os.path.join(d_path,new_name)
+            p_and_n = os.path.join(d_path, new_name)
             imageio.imwrite(p_and_n + str(end_parameters), np.array(urll))
 
     return
+
 
 def ds_source(filename):
     filename = str(filename)

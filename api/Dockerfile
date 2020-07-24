@@ -10,5 +10,7 @@ RUN python3 -m pip install wrapt --upgrade --ignore-installed
 
 RUN python3 -m pip install -r requirements.txt
 
+RUN export LD_PRELOAD=/opt/conda/lib/libmkl_core.so:/opt/conda/lib/libmkl_sequential.so
+
 COPY . /api
 

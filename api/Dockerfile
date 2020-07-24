@@ -4,8 +4,6 @@ WORKDIR /api
 
 COPY requirements.txt /api/requirements.txt
 
-RUN conda update -all
-
 RUN conda install faiss-cpu -c pytorch -y
 
 RUN python3 -m pip install wrapt --upgrade --ignore-installed

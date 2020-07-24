@@ -7,7 +7,7 @@ services:
     build: ./api
     ports:
       - "8000:8000"
-    command: gunicorn -w 1 -b 0.0.0.0:8000 app:app --daemon
+    command: gunicorn -w 1 -b 0.0.0.0:8000 app:app
   
   nginx:
     container_name: nginx

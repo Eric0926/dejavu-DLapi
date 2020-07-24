@@ -8,15 +8,16 @@ app = Flask(__name__)
 
 @app.route("/search")
 def search():
-    img_url = request.form["img_url"]
-    results_num = int(request.form["results_num"])
-    results = None
+    #img_url = request.form["img_url"]
+    #results_num = int(request.form["results_num"])
+    #results = None
     # images = vgg_search('https://storage.googleapis.com/flagged_evaluation_images/444_10_r2.png', 10)
-    try:
-        results = vgg_search(img_url, results_num)
-    except:
-        return "Invalid image url", 400
-    return jsonify(results), 200
+    # try:
+    #    results = vgg_search(img_url, results_num)
+    # except:
+    #    return "Invalid image url", 400
+    # return jsonify(results), 200
+    return "it worked!", 200
 
 
 if __name__ == "__main__":

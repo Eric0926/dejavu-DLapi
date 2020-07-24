@@ -6,6 +6,8 @@ COPY requirements.txt /api/requirements.txt
 
 RUN conda install faiss-cpu -c pytorch -y
 
+RUN conda install mkl
+
 RUN python3 -m pip install wrapt --upgrade --ignore-installed
 
 RUN python3 -m pip install -r requirements.txt
